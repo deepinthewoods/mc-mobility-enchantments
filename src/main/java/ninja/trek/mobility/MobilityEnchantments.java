@@ -19,6 +19,9 @@ public class MobilityEnchantments implements ModInitializer {
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
 
-		LOGGER.info("Hello Fabric world!");
+		LOGGER.info("Initializing Mobility Enchantments");
+
+		// Initialize enchantments (data-driven in 1.21+)
+		ninja.trek.mobility.enchantment.ModEnchantments.initialize();
 	}
 }
