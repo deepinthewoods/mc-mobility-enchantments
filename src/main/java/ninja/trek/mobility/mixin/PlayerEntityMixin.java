@@ -61,6 +61,7 @@ public abstract class PlayerEntityMixin {
             // Apply force
             Vec3d force = new Vec3d(moveX, 0, moveZ).normalize().multiply(MobilityConfig.WALL_JUMP_AIR_CONTROL);
             player.setVelocity(velocity.add(force));
+            serverPlayer.velocityModified = true; // Mark velocity as modified so it syncs to client
         }
     }
 
@@ -84,6 +85,7 @@ public abstract class PlayerEntityMixin {
             // Apply force
             Vec3d force = new Vec3d(moveX, 0, moveZ).normalize().multiply(MobilityConfig.SWOOPING_AIR_CONTROL);
             player.setVelocity(velocity.add(force));
+            serverPlayer.velocityModified = true; // Mark velocity as modified so it syncs to client
         }
     }
 }
