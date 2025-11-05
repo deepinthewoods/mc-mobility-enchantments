@@ -149,10 +149,7 @@ public class ServerPlayNetworkHandlerMixin {
 
     @Unique
     private void handleDoubleJump(MobilityState state) {
-        if (state.mobility$hasUsedDoubleJump()) {
-            debugMessage(player, "FAILED: Double jump already used");
-            return;
-        }
+        // No limit on double jumps - only limited by hunger!
 
         if (!EnchantmentUtil.consumeHunger(player, MobilityConfig.DOUBLE_JUMP_HUNGER_COST)) {
             debugMessage(player, "FAILED: Not enough hunger");
@@ -163,7 +160,6 @@ public class ServerPlayNetworkHandlerMixin {
         player.setVelocity(new Vec3d(velocity.x, MobilityConfig.DOUBLE_JUMP_VELOCITY, velocity.z));
         player.velocityModified = true; // Mark velocity as modified so it syncs to client
 
-        state.mobility$setUsedDoubleJump(true);
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
         debugMessage(player, "SUCCESS: Double jump activated");
     }
