@@ -70,24 +70,4 @@ public interface MobilityState {
      * Reset all mobility states (called when player lands)
      */
     void mobility$resetStates();
-
-    /**
-     * @return accumulated fractional haunches for swooping
-     */
-    float mobility$getSwoopingHaunchAccumulator();
-
-    /**
-     * Set accumulated fractional haunches for swooping
-     */
-    void mobility$setSwoopingHaunchAccumulator(float value);
-
-    /**
-     * @return accumulated fractional haunches for elytra
-     */
-    float mobility$getElytraHaunchAccumulator();
-
-    /**
-     * Set accumulated fractional haunches for elytra
-     */
-    void mobility$setElytraHaunchAccumulator(float value);
 }

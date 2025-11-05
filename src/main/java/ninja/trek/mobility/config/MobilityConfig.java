@@ -56,26 +56,4 @@ public class MobilityConfig {
     // === GENERAL ===
     /** Cooldown ticks to prevent ability spam (3 ticks = 0.15 seconds) */
     public static final int ABILITY_COOLDOWN_TICKS = 3;
-
-    // === HAUNCHES ===
-    /** Initial number of haunches when an enchanted item is created/found */
-    public static final int INITIAL_HAUNCHES = 10;
-
-    /** Maximum number of haunches an item can hold */
-    public static final int MAX_HAUNCHES = 20;
-
-    /** Haunches consumed per double jump */
-    public static final int DOUBLE_JUMP_HAUNCH_COST = 1;
-
-    /** Haunches consumed per dash */
-    public static final int DASH_HAUNCH_COST = 1;
-
-    /** Haunches consumed per tick while swooping (0.1 = consumes 1 haunch every 10 ticks) */
-    public static final float SWOOPING_HAUNCH_PER_TICK = 0.05f;
-
-    /** Haunches consumed per tick while using elytra (consumed over 15 seconds = 300 ticks) */
-    public static final float ELYTRA_HAUNCH_PER_TICK = 1.0f / 300.0f;
-
-    /** Haunches consumed per wall jump */
-    public static final int WALL_JUMP_HAUNCH_COST = 1;
 }
