@@ -2,7 +2,7 @@
   "description": {
     "translate": "enchantment.mobility-enchantments.dash"
   },
-  "supported_items": "#minecraft:chest_armor_enchantable",
+  "supported_items": "#minecraft:enchantable/chest_armor",
   "weight": 1,
   "max_level": 1,
   "min_cost": {
