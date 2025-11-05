@@ -49,19 +49,20 @@ public abstract class LivingEntityMixin {
             return;
         }
 
-        debugMessage(player, "Jump pressed");
-
         MobilityState state = (MobilityState) player;
+
+        // Only activate abilities when falling (not on ground)
+        // Don't show debug messages for normal ground jumps
+        if (self().isOnGround()) {
+            return;
+        }
+
+        // Now we know we're in the air, so this is an enchantment activation attempt
+        debugMessage(player, "Air jump detected - checking enchantments...");
 
         // Check cooldown
         if (state.mobility$getCooldown() > 0) {
             debugMessage(player, "FAILED: Cooldown active (" + state.mobility$getCooldown() + " ticks remaining)");
-            return;
-        }
-
-        // Only activate abilities when falling (not on ground)
-        if (self().isOnGround()) {
-            debugMessage(player, "FAILED: Must be in air (not on ground)");
             return;
         }
 
