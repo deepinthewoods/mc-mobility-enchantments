@@ -28,8 +28,8 @@ public class MobilityConfig {
     public static final double DOUBLE_JUMP_VELOCITY = 0.42;
 
     // === ELYTRA ===
-    /** Lift multiplier for elytra enchantment (0.5 = half normal lift) */
-    public static final double ELYTRA_LIFT_MULTIPLIER = 0.5;
+    /** Lift multiplier for elytra enchantment (1.0 = normal lift, same as vanilla elytra) */
+    public static final double ELYTRA_LIFT_MULTIPLIER = 1.0;
 
     /** Hunger consumed per 15 seconds of elytra use (in half-drumsticks) */
     public static final int ELYTRA_HUNGER_PER_15S = 1;
