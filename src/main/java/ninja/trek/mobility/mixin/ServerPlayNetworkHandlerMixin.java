@@ -50,7 +50,7 @@ public class ServerPlayNetworkHandlerMixin {
     @Inject(method = "onPlayerInput", at = @At("HEAD"))
     private void onPlayerInput(PlayerInputC2SPacket packet, CallbackInfo ci) {
         // Get current jump input from packet
-        boolean currentJumpInput = packet.getJump();
+        boolean currentJumpInput = packet.input().jump();
 
         // Reset jump state when on ground to ensure clean rising edge detection
         // This fixes the issue where packets with jump=false might not arrive between presses
