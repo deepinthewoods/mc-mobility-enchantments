@@ -1,0 +1,15 @@
+{
+  "replace": false,
+  "values": [
+    "mobility-enchantments:swooping",
+    "mobility-enchantments:dash",
+    "mobility-enchantments:double_jump",
+    "mobility-enchantments:elytra",
+    "mobility-enchantments:wall_jump",
+    "minecraft:protection",
+    "minecraft:fire_protection",
+    "minecraft:blast_protection",
+    "minecraft:projectile_protection",
+    "minecraft:feather_falling"
+  ]
+}

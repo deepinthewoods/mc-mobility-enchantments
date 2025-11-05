@@ -3,7 +3,10 @@
 	"package": "ninja.trek.mobility.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"ExampleMixin"
+		"ExampleMixin",
+		"ServerPlayerEntityMixin",
+		"LivingEntityMixin",
+		"PlayerEntityMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
