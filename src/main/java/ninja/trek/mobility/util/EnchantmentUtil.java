@@ -79,10 +79,11 @@ public class EnchantmentUtil {
     }
 
     /**
-     * Try to consume hunger from the player.
+     * Check if player has food, then add exhaustion if they do.
+     * This causes hunger like sprinting/jumping, but fails if food bar is empty.
      * @param player The player
-     * @param amount Amount of hunger to consume (in half-drumsticks)
-     * @return true if hunger was successfully consumed, false if not enough hunger
+     * @param amount Amount of exhaustion to add
+     * @return true if player had food and exhaustion was added, false if food bar is empty
      */
     public static boolean consumeHunger(PlayerEntity player, float amount) {
         if (player.isCreative() || player.isSpectator()) {
@@ -90,14 +91,13 @@ public class EnchantmentUtil {
         }
 
         int currentFoodLevel = player.getHungerManager().getFoodLevel();
-        float currentSaturation = player.getHungerManager().getSaturationLevel();
 
-        // Check if player has enough food
-        if (currentFoodLevel <= 0 && currentSaturation <= 0) {
+        // Check if player has food in their food bar (the visible drumsticks)
+        if (currentFoodLevel <= 0) {
             return false;
         }
 
-        // Consume hunger
+        // Add exhaustion, which naturally drains saturation and then food level
         player.getHungerManager().addExhaustion(amount);
         return true;
     }
