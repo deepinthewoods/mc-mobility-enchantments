@@ -29,6 +29,12 @@ public class ServerPlayerEntityMixin implements MobilityState {
     @Unique
     private int mobility$cooldown = 0;
 
+    @Unique
+    private float mobility$swoopingHaunchAccumulator = 0.0f;
+
+    @Unique
+    private float mobility$elytraHaunchAccumulator = 0.0f;
+
     @Override
     public boolean mobility$isSwooping() {
         return mobility$swooping;
@@ -96,5 +102,27 @@ public class ServerPlayerEntityMixin implements MobilityState {
         this.mobility$usedDoubleJump = false;
         this.mobility$usingElytraEnchantment = false;
         this.mobility$elytraTicks = 0;
+        this.mobility$swoopingHaunchAccumulator = 0.0f;
+        this.mobility$elytraHaunchAccumulator = 0.0f;
+    }
+
+    @Override
+    public float mobility$getSwoopingHaunchAccumulator() {
+        return mobility$swoopingHaunchAccumulator;
+    }
+
+    @Override
+    public void mobility$setSwoopingHaunchAccumulator(float value) {
+        this.mobility$swoopingHaunchAccumulator = value;
+    }
+
+    @Override
+    public float mobility$getElytraHaunchAccumulator() {
+        return mobility$elytraHaunchAccumulator;
+    }
+
+    @Override
+    public void mobility$setElytraHaunchAccumulator(float value) {
+        this.mobility$elytraHaunchAccumulator = value;
     }
 }
