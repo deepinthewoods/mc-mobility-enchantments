@@ -14,6 +14,7 @@ import ninja.trek.mobility.state.MobilityState;
 import ninja.trek.mobility.util.EnchantmentUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -27,6 +28,12 @@ import java.util.Optional;
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin {
 
+    @Shadow
+    protected boolean jumping;
+
+    @Unique
+    private boolean lastJumpingState = false;
+
     private LivingEntity self() {
         return (LivingEntity)(Object)this;
     }
@@ -39,56 +46,51 @@ public abstract class LivingEntityMixin {
     }
 
     /**
-     * Inject into the jump method to handle mobility enchantment activations.
-     * This is called when a player presses the jump key.
+     * Detect when the player presses jump while in the air (like elytra activation).
+     * We check the jumping flag in the tick method since the jump() method is only
+     * called when on ground.
      */
-    @Inject(method = "jump", at = @At("HEAD"), cancellable = true)
-    private void onJump(CallbackInfo ci) {
-        // Only handle server-side player entities
-        if (!((Object) this instanceof ServerPlayerEntity player)) {
-            return;
-        }
-
+    private void checkAirJumpActivation(ServerPlayerEntity player) {
         MobilityState state = (MobilityState) player;
 
-        // Only activate abilities when falling (not on ground)
-        // Don't show debug messages for normal ground jumps
-        if (self().isOnGround()) {
-            return;
+        // Detect rising edge of jump press (wasn't jumping before, is jumping now)
+        if (jumping && !lastJumpingState && !self().isOnGround()) {
+            // Now we know we're in the air and jump was just pressed
+            debugMessage(player, "Air jump detected - checking enchantments...");
+
+            // Check cooldown
+            if (state.mobility$getCooldown() > 0) {
+                debugMessage(player, "FAILED: Cooldown active (" + state.mobility$getCooldown() + " ticks remaining)");
+                return;
+            }
+
+            // Get the mobility enchantment on the player's chestplate
+            Optional<RegistryKey<Enchantment>> enchantment = EnchantmentUtil.getMobilityEnchantment(player);
+            if (enchantment.isEmpty()) {
+                debugMessage(player, "FAILED: No mobility enchantment on chestplate");
+                return;
+            }
+
+            RegistryKey<Enchantment> ench = enchantment.get();
+            String enchName = ench.getValue().getPath();
+            debugMessage(player, "Attempting to activate: " + enchName);
+
+            // Handle each enchantment type
+            if (ench.equals(ModEnchantments.SWOOPING)) {
+                handleSwooping(player, state);
+            } else if (ench.equals(ModEnchantments.DASH)) {
+                handleDash(player, state);
+            } else if (ench.equals(ModEnchantments.DOUBLE_JUMP)) {
+                handleDoubleJump(player, state);
+            } else if (ench.equals(ModEnchantments.ELYTRA)) {
+                handleElytra(player, state);
+            } else if (ench.equals(ModEnchantments.WALL_JUMP)) {
+                handleWallJump(player, state);
+            }
         }
 
-        // Now we know we're in the air, so this is an enchantment activation attempt
-        debugMessage(player, "Air jump detected - checking enchantments...");
-
-        // Check cooldown
-        if (state.mobility$getCooldown() > 0) {
-            debugMessage(player, "FAILED: Cooldown active (" + state.mobility$getCooldown() + " ticks remaining)");
-            return;
-        }
-
-        // Get the mobility enchantment on the player's chestplate
-        Optional<RegistryKey<Enchantment>> enchantment = EnchantmentUtil.getMobilityEnchantment(player);
-        if (enchantment.isEmpty()) {
-            debugMessage(player, "FAILED: No mobility enchantment on chestplate");
-            return;
-        }
-
-        RegistryKey<Enchantment> ench = enchantment.get();
-        String enchName = ench.getValue().getPath();
-        debugMessage(player, "Attempting to activate: " + enchName);
-
-        // Handle each enchantment type
-        if (ench.equals(ModEnchantments.SWOOPING)) {
-            handleSwooping(player, state, ci);
-        } else if (ench.equals(ModEnchantments.DASH)) {
-            handleDash(player, state, ci);
-        } else if (ench.equals(ModEnchantments.DOUBLE_JUMP)) {
-            handleDoubleJump(player, state, ci);
-        } else if (ench.equals(ModEnchantments.ELYTRA)) {
-            handleElytra(player, state, ci);
-        } else if (ench.equals(ModEnchantments.WALL_JUMP)) {
-            handleWallJump(player, state, ci);
-        }
+        // Update last jumping state
+        lastJumpingState = jumping;
     }
 
     /**
@@ -101,6 +103,9 @@ public abstract class LivingEntityMixin {
         }
 
         MobilityState state = (MobilityState) player;
+
+        // Check for air jump activation (pressing jump while in the air)
+        checkAirJumpActivation(player);
 
         // Decrement cooldown
         if (state.mobility$getCooldown() > 0) {
@@ -130,7 +135,7 @@ public abstract class LivingEntityMixin {
 
     // ========== SWOOPING ==========
 
-    private void handleSwooping(ServerPlayerEntity player, MobilityState state, CallbackInfo ci) {
+    private void handleSwooping(ServerPlayerEntity player, MobilityState state) {
         // Check hunger
         if (!EnchantmentUtil.consumeHunger(player, 0)) {
             debugMessage(player, "FAILED: Not enough hunger");
@@ -145,7 +150,6 @@ public abstract class LivingEntityMixin {
         // (No velocity change on activation, just enable the gliding state)
 
         debugMessage(player, "SUCCESS: Swooping activated");
-        ci.cancel(); // Cancel normal jump
     }
 
     private void tickSwooping(ServerPlayerEntity player, MobilityState state) {
@@ -176,7 +180,7 @@ public abstract class LivingEntityMixin {
 
     // ========== DASH ==========
 
-    private void handleDash(ServerPlayerEntity player, MobilityState state, CallbackInfo ci) {
+    private void handleDash(ServerPlayerEntity player, MobilityState state) {
         // Check and consume hunger
         if (!EnchantmentUtil.consumeHunger(player, MobilityConfig.DASH_HUNGER_COST)) {
             debugMessage(player, "FAILED: Not enough hunger");
@@ -193,12 +197,11 @@ public abstract class LivingEntityMixin {
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
 
         debugMessage(player, "SUCCESS: Dash activated");
-        ci.cancel(); // Cancel normal jump
     }
 
     // ========== DOUBLE JUMP ==========
 
-    private void handleDoubleJump(ServerPlayerEntity player, MobilityState state, CallbackInfo ci) {
+    private void handleDoubleJump(ServerPlayerEntity player, MobilityState state) {
         // Check if already used double jump
         if (state.mobility$hasUsedDoubleJump()) {
             debugMessage(player, "FAILED: Double jump already used");
@@ -219,12 +222,11 @@ public abstract class LivingEntityMixin {
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
 
         debugMessage(player, "SUCCESS: Double jump activated");
-        ci.cancel(); // Cancel normal jump (which would fail anyway)
     }
 
     // ========== ELYTRA ==========
 
-    private void handleElytra(ServerPlayerEntity player, MobilityState state, CallbackInfo ci) {
+    private void handleElytra(ServerPlayerEntity player, MobilityState state) {
         // Check hunger
         if (!EnchantmentUtil.consumeHunger(player, 0)) {
             debugMessage(player, "FAILED: Not enough hunger");
@@ -241,7 +243,6 @@ public abstract class LivingEntityMixin {
         self().setVelocity(lookDirection.multiply(0.5));
 
         debugMessage(player, "SUCCESS: Elytra activated");
-        ci.cancel(); // Cancel normal jump
     }
 
     private void tickElytra(ServerPlayerEntity player, MobilityState state) {
@@ -274,7 +275,7 @@ public abstract class LivingEntityMixin {
 
     // ========== WALL JUMP ==========
 
-    private void handleWallJump(ServerPlayerEntity player, MobilityState state, CallbackInfo ci) {
+    private void handleWallJump(ServerPlayerEntity player, MobilityState state) {
         // Check if near a wall
         Vec3d wallNormal = detectWall(player);
         if (wallNormal == null) {
@@ -306,7 +307,6 @@ public abstract class LivingEntityMixin {
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
 
         debugMessage(player, "SUCCESS: Wall jump activated");
-        ci.cancel(); // Cancel normal jump
     }
 
     private void tickWallJumping(ServerPlayerEntity player, MobilityState state) {
