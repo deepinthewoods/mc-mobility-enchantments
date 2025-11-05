@@ -2,8 +2,8 @@
 	"required": true,
 	"package": "ninja.trek.mobility.mixin",
 	"compatibilityLevel": "JAVA_21",
+	"refmap": "mobility-enchantments-refmap.json",
 	"mixins": [
-		"ExampleMixin",
 		"ServerPlayerEntityMixin",
 		"LivingEntityMixin",
 		"PlayerEntityMixin"

@@ -26,17 +26,25 @@ import java.util.Optional;
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin {
 
-    @Shadow
-    public abstract Vec3d getVelocity();
+    private LivingEntity self() {
+        return (LivingEntity)(Object)this;
+    }
 
-    @Shadow
-    public abstract void setVelocity(Vec3d velocity);
+    private Vec3d getVelocity() {
+        return self().getVelocity();
+    }
 
-    @Shadow
-    public abstract boolean isOnGround();
+    private void setVelocity(Vec3d velocity) {
+        self().setVelocity(velocity);
+    }
 
-    @Shadow
-    public abstract Vec3d getRotationVector();
+    private boolean isOnGround() {
+        return self().isOnGround();
+    }
+
+    private Vec3d getRotationVector() {
+        return self().getRotationVector();
+    }
 
     /**
      * Inject into the jump method to handle mobility enchantment activations.
@@ -199,7 +207,7 @@ public abstract class LivingEntityMixin {
 
         // Apply upward velocity
         Vec3d velocity = getVelocity();
-        setVelocity(velocity.x, MobilityConfig.DOUBLE_JUMP_VELOCITY, velocity.z);
+        setVelocity(new Vec3d(velocity.x, MobilityConfig.DOUBLE_JUMP_VELOCITY, velocity.z));
 
         state.mobility$setUsedDoubleJump(true);
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
@@ -314,7 +322,7 @@ public abstract class LivingEntityMixin {
         double dist = MobilityConfig.WALL_DETECTION_DISTANCE;
         BlockPos playerPos = player.getBlockPos();
 
-        Vec3d playerCenter = player.getPos();
+        Vec3d playerCenter = new Vec3d(player.getX(), player.getY(), player.getZ());
         double playerTop = playerCenter.y + 1.5;
         double playerBottom = playerCenter.y + 0.2;
 
@@ -338,7 +346,7 @@ public abstract class LivingEntityMixin {
             BlockPos bottomBlock = BlockPos.ofFloored(bottomProbe);
 
             // Check if these positions have solid blocks
-            if (!player.getWorld().getBlockState(topBlock).isAir() || !player.getWorld().getBlockState(bottomBlock).isAir()) {
+            if (!player.getEntityWorld().getBlockState(topBlock).isAir() || !player.getEntityWorld().getBlockState(bottomBlock).isAir()) {
                 totalNormal = totalNormal.add(dir.multiply(-1)); // Normal points away from wall
                 wallCount++;
             }

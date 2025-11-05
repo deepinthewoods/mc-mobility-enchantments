@@ -2,6 +2,7 @@
 	"required": true,
 	"package": "ninja.trek.mobility.mixin.client",
 	"compatibilityLevel": "JAVA_21",
+	"refmap": "mobility-enchantments-refmap.json",
 	"client": [
 		"ExampleClientMixin"
 	],
