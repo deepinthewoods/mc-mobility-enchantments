@@ -9,6 +9,8 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import ninja.trek.mobility.component.ModDataComponents;
+import ninja.trek.mobility.config.MobilityConfig;
 import ninja.trek.mobility.enchantment.ModEnchantments;
 
 import java.util.Optional;
@@ -100,5 +102,101 @@ public class EnchantmentUtil {
         // Consume hunger
         player.getHungerManager().addExhaustion(amount);
         return true;
+    }
+
+    /**
+     * Get the number of haunches available on the player's chestplate.
+     * If the chestplate doesn't have haunches data yet, initializes it.
+     * @param player The player
+     * @return The number of haunches, or 0 if no enchanted chestplate
+     */
+    public static int getHaunches(PlayerEntity player) {
+        ItemStack chestplate = player.getEquippedStack(EquipmentSlot.CHEST);
+
+        if (chestplate.isEmpty()) {
+            return 0;
+        }
+
+        // Check if this chestplate has a mobility enchantment
+        if (getMobilityEnchantment(player).isEmpty()) {
+            return 0;
+        }
+
+        // Get haunches from data component, or initialize with default value
+        Integer haunches = chestplate.get(ModDataComponents.HAUNCHES);
+        if (haunches == null) {
+            // Initialize haunches on first access
+            setHaunches(player, MobilityConfig.INITIAL_HAUNCHES);
+            return MobilityConfig.INITIAL_HAUNCHES;
+        }
+
+        return haunches;
+    }
+
+    /**
+     * Set the number of haunches on the player's chestplate.
+     * @param player The player
+     * @param amount The number of haunches to set
+     */
+    public static void setHaunches(PlayerEntity player, int amount) {
+        ItemStack chestplate = player.getEquippedStack(EquipmentSlot.CHEST);
+
+        if (chestplate.isEmpty()) {
+            return;
+        }
+
+        // Clamp to valid range
+        amount = Math.max(0, Math.min(amount, MobilityConfig.MAX_HAUNCHES));
+
+        chestplate.set(ModDataComponents.HAUNCHES, amount);
+    }
+
+    /**
+     * Try to consume haunches from the player's chestplate.
+     * @param player The player
+     * @param amount Amount of haunches to consume (can be fractional, will round down)
+     * @return true if haunches were successfully consumed, false if not enough haunches
+     */
+    public static boolean consumeHaunches(PlayerEntity player, float amount) {
+        if (player.isCreative() || player.isSpectator()) {
+            return true; // Creative/spectator mode always succeeds
+        }
+
+        int currentHaunches = getHaunches(player);
+        int requiredHaunches = (int) Math.ceil(amount);
+
+        if (currentHaunches < requiredHaunches) {
+            return false;
+        }
+
+        setHaunches(player, currentHaunches - requiredHaunches);
+        return true;
+    }
+
+    /**
+     * Try to consume fractional haunches from the player's chestplate.
+     * This uses a state object to track partial haunch consumption over time.
+     * @param player The player
+     * @param amount Amount of haunches to consume (fractional)
+     * @param accumulated Current accumulated fractional haunches
+     * @return new accumulated value after consumption
+     */
+    public static float consumeHaunchesGradual(PlayerEntity player, float amount, float accumulated) {
+        if (player.isCreative() || player.isSpectator()) {
+            return accumulated; // Creative/spectator mode doesn't consume
+        }
+
+        accumulated += amount;
+
+        // Consume whole haunches
+        int toConsume = (int) accumulated;
+        if (toConsume > 0) {
+            int currentHaunches = getHaunches(player);
+            int actualConsumed = Math.min(toConsume, currentHaunches);
+            setHaunches(player, currentHaunches - actualConsumed);
+            accumulated -= actualConsumed;
+        }
+
+        return accumulated;
     }
 }

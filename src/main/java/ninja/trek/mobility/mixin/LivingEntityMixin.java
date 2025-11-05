@@ -63,13 +63,15 @@ public abstract class LivingEntityMixin {
     // ========== SWOOPING ==========
 
     private void tickSwooping(ServerPlayerEntity player, MobilityState state) {
-        // Consume hunger per second
-        if (player.age % 20 == 0) { // Every second
-            if (!EnchantmentUtil.consumeHunger(player, MobilityConfig.SWOOPING_HUNGER_PER_SECOND)) {
-                // Out of hunger, stop swooping
-                state.mobility$setSwooping(false);
-                return;
-            }
+        // Consume haunches gradually per tick
+        float accumulated = state.mobility$getSwoopingHaunchAccumulator();
+        accumulated = EnchantmentUtil.consumeHaunchesGradual(player, MobilityConfig.SWOOPING_HAUNCH_PER_TICK, accumulated);
+        state.mobility$setSwoopingHaunchAccumulator(accumulated);
+
+        // Check if out of haunches
+        if (EnchantmentUtil.getHaunches(player) <= 0) {
+            state.mobility$setSwooping(false);
+            return;
         }
 
         // Apply gliding physics - maintain current velocity with slight drag
@@ -95,13 +97,15 @@ public abstract class LivingEntityMixin {
         // Increment elytra ticks
         state.mobility$setElytraTicks(state.mobility$getElytraTicks() + 1);
 
-        // Consume hunger every 15 seconds
-        if (state.mobility$getElytraTicks() % MobilityConfig.ELYTRA_HUNGER_TICK_INTERVAL == 0) {
-            if (!EnchantmentUtil.consumeHunger(player, MobilityConfig.ELYTRA_HUNGER_PER_15S)) {
-                // Out of hunger, stop elytra
-                state.mobility$setUsingElytraEnchantment(false);
-                return;
-            }
+        // Consume haunches gradually per tick
+        float accumulated = state.mobility$getElytraHaunchAccumulator();
+        accumulated = EnchantmentUtil.consumeHaunchesGradual(player, MobilityConfig.ELYTRA_HAUNCH_PER_TICK, accumulated);
+        state.mobility$setElytraHaunchAccumulator(accumulated);
+
+        // Check if out of haunches
+        if (EnchantmentUtil.getHaunches(player) <= 0) {
+            state.mobility$setUsingElytraEnchantment(false);
+            return;
         }
 
         // Apply elytra physics with reduced lift
