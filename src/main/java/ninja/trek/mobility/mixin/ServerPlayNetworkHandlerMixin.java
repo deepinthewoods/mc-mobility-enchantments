@@ -150,7 +150,7 @@ public class ServerPlayNetworkHandlerMixin {
 
     @Unique
     private void handleDoubleJump(MobilityState state) {
-        // No longer checking if double jump was used - unlimited jumps until haunches run out!
+        // No limit on double jumps - only limited by hunger!
 
         if (!EnchantmentUtil.consumeHaunches(player, MobilityConfig.DOUBLE_JUMP_HAUNCH_COST)) {
             debugMessage(player, "FAILED: Not enough haunches (" + EnchantmentUtil.getHaunches(player) + " remaining)");
