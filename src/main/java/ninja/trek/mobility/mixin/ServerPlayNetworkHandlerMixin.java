@@ -117,23 +117,17 @@ public class ServerPlayNetworkHandlerMixin {
 
     @Unique
     private void handleSwooping(MobilityState state) {
-        // Check if player has any haunches before activating
-        if (EnchantmentUtil.getHaunches(player) <= 0) {
-            debugMessage(player, "FAILED: Not enough haunches");
-            return;
-        }
-
         state.mobility$setSwooping(true);
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
-        debugMessage(player, "SUCCESS: Swooping activated (" + EnchantmentUtil.getHaunches(player) + " haunches remaining)");
+        debugMessage(player, "SUCCESS: Swooping activated");
     }
 
     // ========== DASH ==========
 
     @Unique
     private void handleDash(MobilityState state) {
-        if (!EnchantmentUtil.consumeHaunches(player, MobilityConfig.DASH_HAUNCH_COST)) {
-            debugMessage(player, "FAILED: Not enough haunches (" + EnchantmentUtil.getHaunches(player) + " remaining)");
+        if (!EnchantmentUtil.consumeHunger(player, MobilityConfig.DASH_HUNGER_COST)) {
+            debugMessage(player, "FAILED: Not enough hunger");
             return;
         }
 
@@ -143,17 +137,16 @@ public class ServerPlayNetworkHandlerMixin {
         player.velocityModified = true; // Mark velocity as modified so it syncs to client
 
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
-        debugMessage(player, "SUCCESS: Dash activated (" + EnchantmentUtil.getHaunches(player) + " haunches remaining)");
+        debugMessage(player, "SUCCESS: Dash activated");
     }
 
     // ========== DOUBLE JUMP ==========
 
     @Unique
     private void handleDoubleJump(MobilityState state) {
-        // No limit on double jumps - only limited by hunger!
-
-        if (!EnchantmentUtil.consumeHaunches(player, MobilityConfig.DOUBLE_JUMP_HAUNCH_COST)) {
-            debugMessage(player, "FAILED: Not enough haunches (" + EnchantmentUtil.getHaunches(player) + " remaining)");
+        // Unlimited double jumps! Just subtracts from food bar
+        if (!EnchantmentUtil.consumeHunger(player, MobilityConfig.DOUBLE_JUMP_HUNGER_COST)) {
+            debugMessage(player, "FAILED: Not enough hunger");
             return;
         }
 
@@ -162,19 +155,13 @@ public class ServerPlayNetworkHandlerMixin {
         player.velocityModified = true; // Mark velocity as modified so it syncs to client
 
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
-        debugMessage(player, "SUCCESS: Double jump activated (" + EnchantmentUtil.getHaunches(player) + " haunches remaining)");
+        debugMessage(player, "SUCCESS: Double jump activated");
     }
 
     // ========== ELYTRA ==========
 
     @Unique
     private void handleElytra(MobilityState state) {
-        // Check if player has any haunches before activating
-        if (EnchantmentUtil.getHaunches(player) <= 0) {
-            debugMessage(player, "FAILED: Not enough haunches");
-            return;
-        }
-
         state.mobility$setUsingElytraEnchantment(true);
         state.mobility$setElytraTicks(0);
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
@@ -183,7 +170,7 @@ public class ServerPlayNetworkHandlerMixin {
         player.setVelocity(lookDirection.multiply(0.5));
         player.velocityModified = true; // Mark velocity as modified so it syncs to client
 
-        debugMessage(player, "SUCCESS: Elytra activated (" + EnchantmentUtil.getHaunches(player) + " haunches remaining)");
+        debugMessage(player, "SUCCESS: Elytra activated");
     }
 
     // ========== WALL JUMP ==========
@@ -196,8 +183,8 @@ public class ServerPlayNetworkHandlerMixin {
             return;
         }
 
-        if (!EnchantmentUtil.consumeHaunches(player, MobilityConfig.WALL_JUMP_HAUNCH_COST)) {
-            debugMessage(player, "FAILED: Not enough haunches (" + EnchantmentUtil.getHaunches(player) + " remaining)");
+        if (!EnchantmentUtil.consumeHunger(player, MobilityConfig.WALL_JUMP_HUNGER_COST)) {
+            debugMessage(player, "FAILED: Not enough hunger");
             return;
         }
 

@@ -21,9 +21,6 @@ public class MobilityEnchantments implements ModInitializer {
 
 		LOGGER.info("Initializing Mobility Enchantments");
 
-		// Initialize data components
-		ninja.trek.mobility.component.ModDataComponents.initialize();
-
 		// Initialize enchantments (data-driven in 1.21+)
 		ninja.trek.mobility.enchantment.ModEnchantments.initialize();
 	}
