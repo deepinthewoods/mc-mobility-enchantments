@@ -66,6 +66,8 @@ public class ServerPlayNetworkHandlerMixin {
         if (currentJumpInput && !lastJumpInput && !player.isOnGround()) {
             // Jump was just pressed while in the air!
             handleAirJumpActivation();
+            debugMessage(player, String.format("Activated"
+                    ));
         }
 
         // Update state for next packet
