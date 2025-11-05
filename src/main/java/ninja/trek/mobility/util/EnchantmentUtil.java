@@ -42,7 +42,7 @@ public class EnchantmentUtil {
             if (enchantments.isEmpty()) {
                 serverPlayer.sendMessage(Text.literal("[Enchantment Debug] No enchantments on chestplate"), true);
             } else {
-                serverPlayer.sendMessage(Text.literal("[Enchantment Debug] Enchantments found: " + enchantments.size()), true);
+                serverPlayer.sendMessage(Text.literal("[Enchantment Debug] Enchantments found: " + enchantments.getEnchantments().size()), true);
             }
         }
 
