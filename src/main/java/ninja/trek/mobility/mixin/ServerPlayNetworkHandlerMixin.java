@@ -139,6 +139,7 @@ public class ServerPlayNetworkHandlerMixin {
         Vec3d lookDirection = player.getRotationVector();
         Vec3d dashVelocity = lookDirection.multiply(MobilityConfig.DASH_VELOCITY);
         player.setVelocity(dashVelocity);
+        player.velocityModified = true; // Mark velocity as modified so it syncs to client
 
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
         debugMessage(player, "SUCCESS: Dash activated");
@@ -160,6 +161,7 @@ public class ServerPlayNetworkHandlerMixin {
 
         Vec3d velocity = player.getVelocity();
         player.setVelocity(new Vec3d(velocity.x, MobilityConfig.DOUBLE_JUMP_VELOCITY, velocity.z));
+        player.velocityModified = true; // Mark velocity as modified so it syncs to client
 
         state.mobility$setUsedDoubleJump(true);
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
@@ -181,6 +183,7 @@ public class ServerPlayNetworkHandlerMixin {
 
         Vec3d lookDirection = player.getRotationVector();
         player.setVelocity(lookDirection.multiply(0.5));
+        player.velocityModified = true; // Mark velocity as modified so it syncs to client
 
         debugMessage(player, "SUCCESS: Elytra activated");
     }
@@ -212,6 +215,7 @@ public class ServerPlayNetworkHandlerMixin {
         );
 
         player.setVelocity(jumpVelocity);
+        player.velocityModified = true; // Mark velocity as modified so it syncs to client
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
         debugMessage(player, "SUCCESS: Wall jump activated");
     }

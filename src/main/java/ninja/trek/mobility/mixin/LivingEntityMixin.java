@@ -86,6 +86,7 @@ public abstract class LivingEntityMixin {
         // (The actual input handling is done in the player movement code)
 
         self().setVelocity(velocity);
+        player.velocityModified = true; // Mark velocity as modified so it syncs to client
     }
 
     // ========== ELYTRA ==========
@@ -116,6 +117,7 @@ public abstract class LivingEntityMixin {
         velocity = velocity.add(0, -0.08, 0);
 
         self().setVelocity(velocity);
+        player.velocityModified = true; // Mark velocity as modified so it syncs to client
     }
 
     // ========== WALL JUMP ==========
@@ -133,6 +135,7 @@ public abstract class LivingEntityMixin {
             double scale = MobilityConfig.WALL_JUMP_SPEED_LIMIT / horizontalSpeed;
             velocity = new Vec3d(velocity.x * scale, velocity.y, velocity.z * scale);
             self().setVelocity(velocity);
+            player.velocityModified = true; // Mark velocity as modified so it syncs to client
         }
     }
 }
