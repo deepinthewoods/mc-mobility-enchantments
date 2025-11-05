@@ -5,6 +5,7 @@
 	"refmap": "mobility-enchantments-refmap.json",
 	"mixins": [
 		"ServerPlayerEntityMixin",
+		"ServerPlayNetworkHandlerMixin",
 		"LivingEntityMixin",
 		"PlayerEntityMixin"
 	],
