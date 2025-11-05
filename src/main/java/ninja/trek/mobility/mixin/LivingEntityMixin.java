@@ -104,17 +104,59 @@ public abstract class LivingEntityMixin {
             }
         }
 
-        // Apply elytra physics with reduced lift
+        // Apply vanilla elytra physics (from LivingEntity.travel when fall flying)
         Vec3d velocity = self().getVelocity();
-        Vec3d lookDirection = self().getRotationVector();
+        Vec3d rotation = self().getRotationVector();
 
-        // Simplified elytra physics
-        double speed = velocity.length();
-        velocity = velocity.add(lookDirection.multiply(0.1 * MobilityConfig.ELYTRA_LIFT_MULTIPLIER));
-        velocity = velocity.multiply(0.99); // Air resistance
+        // Get pitch angle for lift calculations
+        float pitch = self().getPitch() * ((float)Math.PI / 180f);
 
-        // Apply gravity
-        velocity = velocity.add(0, -0.08, 0);
+        // Calculate horizontal component of rotation vector (for pitch-based lift)
+        double xRot = Math.sqrt(rotation.x * rotation.x + rotation.z * rotation.z);
+
+        // Current velocities
+        double yVel = velocity.y;
+        double hSpeed = velocity.horizontalLength();
+
+        // Rotation magnitude for normalization
+        double rotMagnitude = rotation.length();
+
+        // Push forward in look direction (scaled by ELYTRA_LIFT_MULTIPLIER)
+        if (rotMagnitude > 0.0) {
+            velocity = velocity.add(
+                rotation.x * 0.1 / rotMagnitude * MobilityConfig.ELYTRA_LIFT_MULTIPLIER,
+                0.0,
+                rotation.z * 0.1 / rotMagnitude * MobilityConfig.ELYTRA_LIFT_MULTIPLIER
+            );
+        }
+
+        // Apply pitch-based aerodynamics
+        if (xRot > 0.0) {
+            // Calculate squared pitch cosine (used for lift calculations)
+            double sqrPitchCos = xRot * xRot;
+
+            // When descending and pitched up, convert downward momentum to lift
+            if (yVel < 0.0) {
+                double liftFromDescending = yVel * -0.1 * sqrPitchCos * MobilityConfig.ELYTRA_LIFT_MULTIPLIER;
+                velocity = velocity.add(0.0, liftFromDescending, 0.0);
+            }
+
+            // Apply pitch-dependent gravity (less gravity when pitched up)
+            double gravity = -0.08 + sqrPitchCos * 0.06 * MobilityConfig.ELYTRA_LIFT_MULTIPLIER;
+            velocity = velocity.add(0.0, gravity, 0.0);
+
+            // When pitched down, convert horizontal speed to lift (dive = speed up, then pull up = gain altitude)
+            if (rotation.y < 0.0) {
+                double pitchDownLift = hSpeed * -rotation.y * 0.04 * MobilityConfig.ELYTRA_LIFT_MULTIPLIER;
+                velocity = velocity.add(0.0, pitchDownLift, 0.0);
+            }
+        } else {
+            // No horizontal rotation component, just apply normal gravity
+            velocity = velocity.add(0.0, -0.08, 0.0);
+        }
+
+        // Apply air drag (horizontal: 0.99, vertical: 0.98 - same as vanilla)
+        velocity = velocity.multiply(0.99, 0.98, 0.99);
 
         self().setVelocity(velocity);
         player.velocityModified = true; // Mark velocity as modified so it syncs to client
