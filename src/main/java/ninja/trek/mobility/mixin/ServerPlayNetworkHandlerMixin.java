@@ -39,7 +39,7 @@ public class ServerPlayNetworkHandlerMixin {
      */
     @Unique
     private void debugMessage(ServerPlayerEntity player, String message) {
-        player.sendMessage(Text.literal("[Mobility Debug] " + message), true);
+        player.sendMessage(Text.literal("[Mobility Debug] " + message), !true);
     }
 
     /**
@@ -66,8 +66,7 @@ public class ServerPlayNetworkHandlerMixin {
         if (currentJumpInput && !lastJumpInput && !player.isOnGround()) {
             // Jump was just pressed while in the air!
             handleAirJumpActivation();
-            debugMessage(player, String.format("Activated"
-                    ));
+
         }
 
         // Update state for next packet
