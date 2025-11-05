@@ -7,6 +7,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import ninja.trek.mobility.enchantment.ModEnchantments;
 
 import java.util.Optional;
@@ -22,8 +24,26 @@ public class EnchantmentUtil {
      */
     public static Optional<RegistryKey<Enchantment>> getMobilityEnchantment(PlayerEntity player) {
         ItemStack chestplate = player.getEquippedStack(EquipmentSlot.CHEST);
+
+        // Debug: Check if wearing chestplate
         if (chestplate.isEmpty()) {
+            if (player instanceof ServerPlayerEntity serverPlayer) {
+                serverPlayer.sendMessage(Text.literal("[Enchantment Debug] No chestplate equipped"), true);
+            }
             return Optional.empty();
+        }
+
+        // Debug: Show what item they're wearing
+        if (player instanceof ServerPlayerEntity serverPlayer) {
+            serverPlayer.sendMessage(Text.literal("[Enchantment Debug] Chestplate: " + chestplate.getItem().getName().getString()), true);
+
+            // List all enchantments on the chestplate
+            var enchantments = EnchantmentHelper.getEnchantments(chestplate);
+            if (enchantments.isEmpty()) {
+                serverPlayer.sendMessage(Text.literal("[Enchantment Debug] No enchantments on chestplate"), true);
+            } else {
+                serverPlayer.sendMessage(Text.literal("[Enchantment Debug] Enchantments found: " + enchantments.size()), true);
+            }
         }
 
         // Check each mobility enchantment
@@ -41,6 +61,10 @@ public class EnchantmentUtil {
         }
         if (hasEnchantment(chestplate, ModEnchantments.WALL_JUMP)) {
             return Optional.of(ModEnchantments.WALL_JUMP);
+        }
+
+        if (player instanceof ServerPlayerEntity serverPlayer) {
+            serverPlayer.sendMessage(Text.literal("[Enchantment Debug] No mobility enchantments found"), true);
         }
 
         return Optional.empty();
