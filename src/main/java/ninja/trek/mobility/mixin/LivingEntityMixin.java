@@ -30,22 +30,6 @@ public abstract class LivingEntityMixin {
         return (LivingEntity)(Object)this;
     }
 
-    private Vec3d getVelocity() {
-        return self().getVelocity();
-    }
-
-    private void setVelocity(Vec3d velocity) {
-        self().setVelocity(velocity);
-    }
-
-    private boolean isOnGround() {
-        return self().isOnGround();
-    }
-
-    private Vec3d getRotationVector() {
-        return self().getRotationVector();
-    }
-
     /**
      * Inject into the jump method to handle mobility enchantment activations.
      * This is called when a player presses the jump key.
@@ -65,7 +49,7 @@ public abstract class LivingEntityMixin {
         }
 
         // Only activate abilities when falling (not on ground)
-        if (isOnGround()) {
+        if (self().isOnGround()) {
             return;
         }
 
@@ -108,7 +92,7 @@ public abstract class LivingEntityMixin {
         }
 
         // Reset states when player lands
-        if (isOnGround()) {
+        if (self().isOnGround()) {
             state.mobility$resetStates();
         }
 
@@ -157,7 +141,7 @@ public abstract class LivingEntityMixin {
         }
 
         // Apply gliding physics - maintain current velocity with slight drag
-        Vec3d velocity = getVelocity();
+        Vec3d velocity = self().getVelocity();
         // Apply air resistance (similar to elytra but simpler)
         double drag = 0.99;
         velocity = velocity.multiply(drag);
@@ -169,7 +153,7 @@ public abstract class LivingEntityMixin {
         // This is handled by the player's movement already, we just apply a small force
         // (The actual input handling is done in the player movement code)
 
-        setVelocity(velocity);
+        self().setVelocity(velocity);
     }
 
     // ========== DASH ==========
@@ -181,11 +165,11 @@ public abstract class LivingEntityMixin {
         }
 
         // Get the direction the player is looking
-        Vec3d lookDirection = getRotationVector();
+        Vec3d lookDirection = self().getRotationVector();
 
         // Set velocity in that direction
         Vec3d dashVelocity = lookDirection.multiply(MobilityConfig.DASH_VELOCITY);
-        setVelocity(dashVelocity);
+        self().setVelocity(dashVelocity);
 
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
 
@@ -206,8 +190,8 @@ public abstract class LivingEntityMixin {
         }
 
         // Apply upward velocity
-        Vec3d velocity = getVelocity();
-        setVelocity(new Vec3d(velocity.x, MobilityConfig.DOUBLE_JUMP_VELOCITY, velocity.z));
+        Vec3d velocity = self().getVelocity();
+        self().setVelocity(new Vec3d(velocity.x, MobilityConfig.DOUBLE_JUMP_VELOCITY, velocity.z));
 
         state.mobility$setUsedDoubleJump(true);
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
@@ -229,8 +213,8 @@ public abstract class LivingEntityMixin {
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
 
         // Start gliding - set velocity to look direction
-        Vec3d lookDirection = getRotationVector();
-        setVelocity(lookDirection.multiply(0.5));
+        Vec3d lookDirection = self().getRotationVector();
+        self().setVelocity(lookDirection.multiply(0.5));
 
         ci.cancel(); // Cancel normal jump
     }
@@ -249,8 +233,8 @@ public abstract class LivingEntityMixin {
         }
 
         // Apply elytra physics with reduced lift
-        Vec3d velocity = getVelocity();
-        Vec3d lookDirection = getRotationVector();
+        Vec3d velocity = self().getVelocity();
+        Vec3d lookDirection = self().getRotationVector();
 
         // Simplified elytra physics
         double speed = velocity.length();
@@ -260,7 +244,7 @@ public abstract class LivingEntityMixin {
         // Apply gravity
         velocity = velocity.add(0, -0.08, 0);
 
-        setVelocity(velocity);
+        self().setVelocity(velocity);
     }
 
     // ========== WALL JUMP ==========
@@ -291,7 +275,7 @@ public abstract class LivingEntityMixin {
             wallNormal.z * horizontalMag
         );
 
-        setVelocity(jumpVelocity);
+        self().setVelocity(jumpVelocity);
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
 
         ci.cancel(); // Cancel normal jump
@@ -302,14 +286,14 @@ public abstract class LivingEntityMixin {
         // This is handled through the movement input system
         // We just apply speed limits here
 
-        Vec3d velocity = getVelocity();
+        Vec3d velocity = self().getVelocity();
         double horizontalSpeed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
 
         // Apply speed limit if needed
         if (horizontalSpeed > MobilityConfig.WALL_JUMP_SPEED_LIMIT) {
             double scale = MobilityConfig.WALL_JUMP_SPEED_LIMIT / horizontalSpeed;
             velocity = new Vec3d(velocity.x * scale, velocity.y, velocity.z * scale);
-            setVelocity(velocity);
+            self().setVelocity(velocity);
         }
     }
 
