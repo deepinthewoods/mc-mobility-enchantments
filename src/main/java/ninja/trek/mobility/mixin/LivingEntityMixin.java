@@ -53,6 +53,12 @@ public abstract class LivingEntityMixin {
     private void checkAirJumpActivation(ServerPlayerEntity player) {
         MobilityState state = (MobilityState) player;
 
+        // Debug: Always show the state when jump key is pressed
+        if (jumping) {
+            debugMessage(player, String.format("Jump key pressed | lastState=%b | onGround=%b",
+                lastJumpingState, self().isOnGround()));
+        }
+
         // Detect rising edge of jump press (wasn't jumping before, is jumping now)
         if (jumping && !lastJumpingState && !self().isOnGround()) {
             // Now we know we're in the air and jump was just pressed
