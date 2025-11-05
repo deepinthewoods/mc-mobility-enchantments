@@ -52,11 +52,15 @@ public class ServerPlayNetworkHandlerMixin {
         // Get current jump input from packet
         boolean currentJumpInput = packet.getJump();
 
-        // Debug: Show input state when jump is pressed
-        if (currentJumpInput) {
-            debugMessage(player, String.format("Jump packet received | lastInput=%b | onGround=%b",
-                lastJumpInput, player.isOnGround()));
+        // Reset jump state when on ground to ensure clean rising edge detection
+        // This fixes the issue where packets with jump=false might not arrive between presses
+        if (player.isOnGround()) {
+            lastJumpInput = false;
         }
+
+        // Debug: Show ALL input packets to understand the packet flow
+        debugMessage(player, String.format("Input packet | jump=%b | lastJump=%b | onGround=%b",
+            currentJumpInput, lastJumpInput, player.isOnGround()));
 
         // Detect rising edge: jump pressed this tick but not last tick
         if (currentJumpInput && !lastJumpInput && !player.isOnGround()) {
