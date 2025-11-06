@@ -99,27 +99,15 @@ public class ServerPlayNetworkHandlerMixin {
         String enchName = ench.getValue().getPath();
         debugMessage(player, "Attempting to activate: " + enchName);
 
-        // Handle each enchantment type
-        if (ench.equals(ModEnchantments.SWOOPING)) {
-            handleSwooping(state);
-        } else if (ench.equals(ModEnchantments.DASH)) {
+        //TODO
+
+        if (ench.equals(ModEnchantments.DASH)) {
             handleDash(state);
         } else if (ench.equals(ModEnchantments.DOUBLE_JUMP)) {
             handleDoubleJump(state);
-        } else if (ench.equals(ModEnchantments.ELYTRA)) {
-            handleElytra(state);
         } else if (ench.equals(ModEnchantments.WALL_JUMP)) {
             handleWallJump(state);
         }
-    }
-
-    // ========== SWOOPING ==========
-
-    @Unique
-    private void handleSwooping(MobilityState state) {
-        state.mobility$setSwooping(true);
-        state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
-        debugMessage(player, "SUCCESS: Swooping activated");
     }
 
     // ========== DASH ==========
@@ -158,21 +146,7 @@ public class ServerPlayNetworkHandlerMixin {
         debugMessage(player, "SUCCESS: Double jump activated");
     }
 
-    // ========== ELYTRA ==========
-
-    @Unique
-    private void handleElytra(MobilityState state) {
-        state.mobility$setUsingElytraEnchantment(true);
-        state.mobility$setElytraTicks(0);
-        state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
-
-        // Give initial forward impulse
-        Vec3d lookDirection = player.getRotationVector();
-        player.setVelocity(lookDirection.multiply(0.5));
-        player.velocityModified = true; // Mark velocity as modified so it syncs to client
-
-        debugMessage(player, "SUCCESS: Elytra activated");
-    }
+    //TODO
 
     // ========== WALL JUMP ==========
 

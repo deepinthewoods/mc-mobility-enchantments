@@ -6,15 +6,7 @@ package ninja.trek.mobility.state;
  */
 public interface MobilityState {
 
-    /**
-     * @return true if the player is currently swooping
-     */
-    boolean mobility$isSwooping();
-
-    /**
-     * Set whether the player is swooping
-     */
-    void mobility$setSwooping(boolean swooping);
+    //TODO
 
     /**
      * @return true if the player is in wall jumping mode
@@ -35,36 +27,6 @@ public interface MobilityState {
      * Set whether the player has used their double jump
      */
     void mobility$setUsedDoubleJump(boolean used);
-
-    /**
-     * @return true if the player is using the elytra enchantment
-     */
-    boolean mobility$isUsingElytraEnchantment();
-
-    /**
-     * Set whether the player is using the elytra enchantment
-     */
-    void mobility$setUsingElytraEnchantment(boolean using);
-
-    /**
-     * @return the number of ticks the elytra enchantment has been active
-     */
-    int mobility$getElytraTicks();
-
-    /**
-     * Set the number of ticks the elytra enchantment has been active
-     */
-    void mobility$setElytraTicks(int ticks);
-
-    /**
-     * @return the number of ticks the swooping enchantment has been active
-     */
-    int mobility$getSwoopingTicks();
-
-    /**
-     * Set the number of ticks the swooping enchantment has been active
-     */
-    void mobility$setSwoopingTicks(int ticks);
 
     /**
      * @return the cooldown remaining before another ability can be used
