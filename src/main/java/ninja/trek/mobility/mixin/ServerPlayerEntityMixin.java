@@ -27,6 +27,9 @@ public class ServerPlayerEntityMixin implements MobilityState {
     private int mobility$elytraTicks = 0;
 
     @Unique
+    private int mobility$swoopingTicks = 0;
+
+    @Unique
     private int mobility$cooldown = 0;
 
     @Override
@@ -80,6 +83,16 @@ public class ServerPlayerEntityMixin implements MobilityState {
     }
 
     @Override
+    public int mobility$getSwoopingTicks() {
+        return mobility$swoopingTicks;
+    }
+
+    @Override
+    public void mobility$setSwoopingTicks(int ticks) {
+        this.mobility$swoopingTicks = ticks;
+    }
+
+    @Override
     public int mobility$getCooldown() {
         return mobility$cooldown;
     }
@@ -96,5 +109,6 @@ public class ServerPlayerEntityMixin implements MobilityState {
         this.mobility$usedDoubleJump = false;
         this.mobility$usingElytraEnchantment = false;
         this.mobility$elytraTicks = 0;
+        this.mobility$swoopingTicks = 0;
     }
 }

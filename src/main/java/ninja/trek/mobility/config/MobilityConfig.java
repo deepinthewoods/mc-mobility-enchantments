@@ -13,6 +13,9 @@ public class MobilityConfig {
     /** Force applied when player moves horizontally while swooping (same as falling normally) */
     public static final float SWOOPING_AIR_CONTROL = 0.02f;
 
+    /** Lift multiplier for swooping enchantment (1.0 = normal lift, uses velocity direction) */
+    public static final double SWOOPING_LIFT_MULTIPLIER = 1.0;
+
     // === DASH ===
     /** Velocity magnitude for dash (sufficient to move ~10 blocks) */
     public static final double DASH_VELOCITY = 1.5;

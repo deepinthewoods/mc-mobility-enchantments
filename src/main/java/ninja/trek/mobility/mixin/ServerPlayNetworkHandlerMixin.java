@@ -166,6 +166,7 @@ public class ServerPlayNetworkHandlerMixin {
         state.mobility$setElytraTicks(0);
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
 
+        // Give initial forward impulse
         Vec3d lookDirection = player.getRotationVector();
         player.setVelocity(lookDirection.multiply(0.5));
         player.velocityModified = true; // Mark velocity as modified so it syncs to client

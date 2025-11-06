@@ -57,6 +57,16 @@ public interface MobilityState {
     void mobility$setElytraTicks(int ticks);
 
     /**
+     * @return the number of ticks the swooping enchantment has been active
+     */
+    int mobility$getSwoopingTicks();
+
+    /**
+     * Set the number of ticks the swooping enchantment has been active
+     */
+    void mobility$setSwoopingTicks(int ticks);
+
+    /**
      * @return the cooldown remaining before another ability can be used
      */
     int mobility$getCooldown();
