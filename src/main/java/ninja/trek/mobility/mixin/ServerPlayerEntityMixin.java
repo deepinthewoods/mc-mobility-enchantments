@@ -17,7 +17,11 @@ public class ServerPlayerEntityMixin implements MobilityState {
     @Unique
     private boolean mobility$usedDoubleJump = false;
 
-    //TODO
+    @Unique
+    private boolean mobility$elytraGliding = false;
+
+    @Unique
+    private float mobility$elytraHungerRemainder = 0.0F;
 
     @Unique
     private int mobility$cooldown = 0;
@@ -42,7 +46,25 @@ public class ServerPlayerEntityMixin implements MobilityState {
         this.mobility$usedDoubleJump = used;
     }
 
-    //TODO
+    @Override
+    public boolean mobility$isElytraGliding() {
+        return mobility$elytraGliding;
+    }
+
+    @Override
+    public void mobility$setElytraGliding(boolean gliding) {
+        this.mobility$elytraGliding = gliding;
+    }
+
+    @Override
+    public float mobility$getElytraHungerRemainder() {
+        return mobility$elytraHungerRemainder;
+    }
+
+    @Override
+    public void mobility$setElytraHungerRemainder(float remainder) {
+        this.mobility$elytraHungerRemainder = remainder;
+    }
 
     @Override
     public int mobility$getCooldown() {
@@ -58,6 +80,7 @@ public class ServerPlayerEntityMixin implements MobilityState {
     public void mobility$resetStates() {
         this.mobility$wallJumping = false;
         this.mobility$usedDoubleJump = false;
-        //TODO
+        this.mobility$elytraGliding = false;
+        this.mobility$elytraHungerRemainder = 0.0F;
     }
 }

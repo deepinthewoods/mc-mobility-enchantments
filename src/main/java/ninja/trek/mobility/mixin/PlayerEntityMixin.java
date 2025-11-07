@@ -28,9 +28,6 @@ public abstract class PlayerEntityMixin {
         PlayerEntity player = self();
 
         if (!(player instanceof ServerPlayerEntity serverPlayer)) {
-            if (((EntityAccessor) player).invokeGetFlag(7)) {
-                ci.cancel();
-            }
             return;
         }
 

@@ -1,6 +1,10 @@
 package ninja.trek.mobility.mixin;
 
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInputC2SPacket;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.network.ServerPlayNetworkHandler;
@@ -99,8 +103,6 @@ public class ServerPlayNetworkHandlerMixin {
         String enchName = ench.getValue().getPath();
         debugMessage(player, "Attempting to activate: " + enchName);
 
-        //TODO
-
         if (ench.equals(ModEnchantments.DASH)) {
             handleDash(state);
         } else if (ench.equals(ModEnchantments.DOUBLE_JUMP)) {
@@ -108,6 +110,73 @@ public class ServerPlayNetworkHandlerMixin {
         } else if (ench.equals(ModEnchantments.WALL_JUMP)) {
             handleWallJump(state);
         }
+
+    }
+
+    /**
+     * Listen for vanilla's start-fall-flying command so we can piggyback on the
+     * exact timing vanilla uses (the client sends this when the player double-taps jump).
+     */
+    @Inject(method = "onClientCommand", at = @At("HEAD"), cancellable = true)
+    private void mobility$onClientCommand(ClientCommandC2SPacket packet, CallbackInfo ci) {
+        if (packet.getMode() != ClientCommandC2SPacket.Mode.START_FALL_FLYING) {
+            return;
+        }
+
+        MobilityState state = (MobilityState) player;
+        boolean handled = handleElytra(state);
+
+        if (handled) {
+            ci.cancel(); // Prevent vanilla from running its own logic with a non-elytra chestplate
+        }
+    }
+
+    // ========== ELYTRA ==========
+
+    @Unique
+    private boolean handleElytra(MobilityState state) {
+        ItemStack chestplate = player.getEquippedStack(EquipmentSlot.CHEST);
+        if (!EnchantmentUtil.hasEnchantment(chestplate, ModEnchantments.ELYTRA)) {
+            debugMessage(player, "FAILED: Elytra enchantment missing");
+            return false;
+        }
+
+        if (player.isGliding()) {
+            debugMessage(player, "FAILED: Already gliding");
+            return false;
+        }
+
+        if (player.isOnGround()) {
+            debugMessage(player, "FAILED: Must be airborne to start gliding");
+            return false;
+        }
+
+        if (player.hasVehicle()) {
+            debugMessage(player, "FAILED: Cannot glide while riding");
+            return false;
+        }
+
+        if (player.isTouchingWater()) {
+            debugMessage(player, "FAILED: Cannot glide while touching water");
+            return false;
+        }
+
+        if (player.hasStatusEffect(StatusEffects.LEVITATION)) {
+            debugMessage(player, "FAILED: Levitation prevents gliding");
+            return false;
+        }
+
+        if (chestplate.isDamageable() && chestplate.getDamage() >= chestplate.getMaxDamage() - 1) {
+            debugMessage(player, "FAILED: Chestplate would break on glide start");
+            return false;
+        }
+
+        player.startGliding();
+        state.mobility$setElytraGliding(true);
+        state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
+        state.mobility$setWallJumping(false);
+        debugMessage(player, "SUCCESS: Elytra glide activated");
+        return true;
     }
 
     // ========== DASH ==========
@@ -146,7 +215,7 @@ public class ServerPlayNetworkHandlerMixin {
         debugMessage(player, "SUCCESS: Double jump activated");
     }
 
-    //TODO
+    // Additional mobility abilities (e.g., future swooping support) handled below
 
     // ========== WALL JUMP ==========
 

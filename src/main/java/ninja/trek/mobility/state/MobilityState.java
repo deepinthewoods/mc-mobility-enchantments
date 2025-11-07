@@ -6,7 +6,25 @@ package ninja.trek.mobility.state;
  */
 public interface MobilityState {
 
-    //TODO
+    /**
+     * @return true if the player is gliding due to the elytra enchantment
+     */
+    boolean mobility$isElytraGliding();
+
+    /**
+     * Set whether the player is gliding due to the elytra enchantment
+     */
+    void mobility$setElytraGliding(boolean gliding);
+
+    /**
+     * @return the accumulated exhaustion that has not yet been applied while gliding
+     */
+    float mobility$getElytraHungerRemainder();
+
+    /**
+     * Store the accumulated exhaustion remainder while gliding
+     */
+    void mobility$setElytraHungerRemainder(float remainder);
 
     /**
      * @return true if the player is in wall jumping mode
