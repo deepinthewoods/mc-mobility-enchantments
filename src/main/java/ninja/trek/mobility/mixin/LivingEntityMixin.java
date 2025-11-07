@@ -4,13 +4,14 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import ninja.trek.mobility.config.MobilityConfig;
 import ninja.trek.mobility.enchantment.ModEnchantments;
+import ninja.trek.mobility.physics.ElytraPhysics;
 import ninja.trek.mobility.state.MobilityState;
 import ninja.trek.mobility.util.EnchantmentUtil;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -23,13 +24,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin {
 
+    @Unique
+    private Vec3d mobility$preTickVelocity = Vec3d.ZERO;
+
     private LivingEntity self() {
         return (LivingEntity)(Object)this;
     }
 
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void mobility$capturePreTickVelocity(CallbackInfo ci) {
+        this.mobility$preTickVelocity = self().getVelocity();
+    }
+
     /**
-     * Inject into tick to handle state management (cooldown, hunger, landing).
-     * Physics are handled in PlayerEntityMixin.travel() injection.
+     * Inject into tick to handle state management (cooldown, hunger, landing) and
+     * run our custom Elytra physics once vanilla is done with its update.
      */
     @Inject(method = "tick", at = @At("TAIL"))
     private void onTick(CallbackInfo ci) {
@@ -78,6 +87,8 @@ public abstract class LivingEntityMixin {
         if (state.mobility$isWallJumping()) {
             tickWallJumping(player, state);
         }
+
+        maybeApplyElytraPhysics(player, state);
     }
 
     @Inject(method = "canGlideWith", at = @At("HEAD"), cancellable = true)
@@ -96,42 +107,6 @@ public abstract class LivingEntityMixin {
         }
 
         cir.setReturnValue(true);
-    }
-
-    @Inject(method = "calcGlidingVelocity", at = @At("HEAD"), cancellable = true)
-    private void mobility$overrideGlidePhysics(Vec3d oldVelocity, CallbackInfoReturnable<Vec3d> cir) {
-        ItemStack chest = self().getEquippedStack(EquipmentSlot.CHEST);
-        if (!EnchantmentUtil.hasEnchantment(chest, ModEnchantments.ELYTRA)) {
-            return;
-        }
-
-        Vec3d rotation = self().getRotationVector();
-        float pitchRadians = self().getPitch() * (float) (Math.PI / 180.0);
-        double horizontalRotation = Math.sqrt(rotation.x * rotation.x + rotation.z * rotation.z);
-        double horizontalSpeed = oldVelocity.horizontalLength();
-        double gravity = ((LivingEntityAccessor) this).invokeGetEffectiveGravity();
-        double cosSquared = MathHelper.square(Math.cos(pitchRadians));
-
-        double liftMultiplier = MobilityConfig.ELYTRA_LIFT_MULTIPLIER;
-        Vec3d velocity = oldVelocity.add(0.0, gravity * (-1.0 + cosSquared * 0.75 * liftMultiplier), 0.0);
-
-        if (velocity.y < 0.0 && horizontalRotation > 0.0) {
-            double adjust = velocity.y * -0.1 * cosSquared;
-            velocity = velocity.add(rotation.x * adjust / horizontalRotation, adjust, rotation.z * adjust / horizontalRotation);
-        }
-
-        if (pitchRadians < 0.0F && horizontalRotation > 0.0) {
-            double adjust = horizontalSpeed * -MathHelper.sin(pitchRadians) * 0.04;
-            velocity = velocity.add(-rotation.x * adjust / horizontalRotation, adjust * 3.2, -rotation.z * adjust / horizontalRotation);
-        }
-
-        if (horizontalRotation > 0.0) {
-            double adjustX = (rotation.x / horizontalRotation * horizontalSpeed - velocity.x) * 0.1;
-            double adjustZ = (rotation.z / horizontalRotation * horizontalSpeed - velocity.z) * 0.1;
-            velocity = velocity.add(adjustX, 0.0, adjustZ);
-        }
-
-        cir.setReturnValue(velocity.multiply(0.99F, 0.98F, 0.99F));
     }
 
     private boolean hasElytraEnchant(ServerPlayerEntity player) {
@@ -156,5 +131,20 @@ public abstract class LivingEntityMixin {
             self().setVelocity(velocity);
             player.velocityModified = true; // Mark velocity as modified so it syncs to client
         }
+    }
+
+    private void maybeApplyElytraPhysics(ServerPlayerEntity player, MobilityState state) {
+        if (!state.mobility$isElytraGliding()) {
+            return;
+        }
+
+        if (!hasElytraEnchant(player)) {
+            return;
+        }
+
+        Vec3d oldVelocity = mobility$preTickVelocity;
+        Vec3d newVelocity = ElytraPhysics.computeGlideVelocity(player, oldVelocity, ((LivingEntityAccessor) this).invokeGetEffectiveGravity());
+        player.setVelocity(newVelocity);
+        player.velocityModified = true;
     }
 }

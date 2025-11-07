@@ -32,7 +32,13 @@ public class MobilityConfig {
 
     // === ELYTRA ===
     /** Lift multiplier for elytra enchantment (1.0 = normal lift, same as vanilla elytra) */
-    public static final double ELYTRA_LIFT_MULTIPLIER = 1.0;
+    public static final double ELYTRA_LIFT_MULTIPLIER = 0.015;
+
+    /** Drag multiplier for X/Z axes while gliding (vanilla default 0.99) */
+    public static final double ELYTRA_DRAG_XZ = 0.99;
+
+    /** Drag multiplier for Y axis while gliding (vanilla default 0.98) */
+    public static final double ELYTRA_DRAG_Y = 0.98;
 
     /** Hunger consumed per 15 seconds of elytra use (in half-drumsticks) */
     public static final int ELYTRA_HUNGER_PER_15S = 1;
