@@ -125,6 +125,9 @@ public class ServerPlayNetworkHandlerMixin {
 
         MobilityState state = (MobilityState) player;
         boolean handled = handleElytra(state);
+        if (!handled) {
+            handled = handleSwooping(state);
+        }
 
         if (handled) {
             ci.cancel(); // Prevent vanilla from running its own logic with a non-elytra chestplate
@@ -176,6 +179,54 @@ public class ServerPlayNetworkHandlerMixin {
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
         state.mobility$setWallJumping(false);
         debugMessage(player, "SUCCESS: Elytra glide activated");
+        return true;
+    }
+
+    // ========== SWOOPING ==========
+
+    @Unique
+    private boolean handleSwooping(MobilityState state) {
+        ItemStack chestplate = player.getEquippedStack(EquipmentSlot.CHEST);
+        if (!EnchantmentUtil.hasEnchantment(chestplate, ModEnchantments.SWOOPING)) {
+            debugMessage(player, "FAILED: Swooping enchantment missing");
+            return false;
+        }
+
+        if (player.isGliding()) {
+            debugMessage(player, "FAILED: Already gliding");
+            return false;
+        }
+
+        if (player.isOnGround()) {
+            debugMessage(player, "FAILED: Must be airborne to start gliding");
+            return false;
+        }
+
+        if (player.hasVehicle()) {
+            debugMessage(player, "FAILED: Cannot glide while riding");
+            return false;
+        }
+
+        if (player.isTouchingWater()) {
+            debugMessage(player, "FAILED: Cannot glide while touching water");
+            return false;
+        }
+
+        if (player.hasStatusEffect(StatusEffects.LEVITATION)) {
+            debugMessage(player, "FAILED: Levitation prevents gliding");
+            return false;
+        }
+
+        if (chestplate.isDamageable() && chestplate.getDamage() >= chestplate.getMaxDamage() - 1) {
+            debugMessage(player, "FAILED: Chestplate would break on glide start");
+            return false;
+        }
+
+        player.startGliding();
+        state.mobility$setSwoopingGliding(true);
+        state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
+        state.mobility$setWallJumping(false);
+        debugMessage(player, "SUCCESS: Swooping glide activated");
         return true;
     }
 

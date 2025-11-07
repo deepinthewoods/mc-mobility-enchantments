@@ -17,14 +17,34 @@ public interface MobilityState {
     void mobility$setElytraGliding(boolean gliding);
 
     /**
-     * @return the accumulated exhaustion that has not yet been applied while gliding
+     * @return true if the player is gliding due to the swooping enchantment
+     */
+    boolean mobility$isSwoopingGliding();
+
+    /**
+     * Set whether the player is gliding due to the swooping enchantment
+     */
+    void mobility$setSwoopingGliding(boolean gliding);
+
+    /**
+     * @return the accumulated exhaustion that has not yet been applied while gliding with the elytra enchantment
      */
     float mobility$getElytraHungerRemainder();
 
     /**
-     * Store the accumulated exhaustion remainder while gliding
+     * Store the accumulated exhaustion remainder while gliding with the elytra enchantment
      */
     void mobility$setElytraHungerRemainder(float remainder);
+
+    /**
+     * @return the accumulated exhaustion that has not yet been applied while gliding with the swooping enchantment
+     */
+    float mobility$getSwoopingHungerRemainder();
+
+    /**
+     * Store the accumulated exhaustion remainder while gliding with the swooping enchantment
+     */
+    void mobility$setSwoopingHungerRemainder(float remainder);
 
     /**
      * @return true if the player is in wall jumping mode

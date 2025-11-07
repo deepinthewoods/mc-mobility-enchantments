@@ -2,12 +2,14 @@ package ninja.trek.mobility.mixin;
 
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
 import ninja.trek.mobility.config.MobilityConfig;
 import ninja.trek.mobility.enchantment.ModEnchantments;
 import ninja.trek.mobility.physics.ElytraPhysics;
+import ninja.trek.mobility.physics.SwoopingPhysics;
 import ninja.trek.mobility.state.MobilityState;
 import ninja.trek.mobility.util.EnchantmentUtil;
 import org.spongepowered.asm.mixin.Mixin;
@@ -58,10 +60,16 @@ public abstract class LivingEntityMixin {
             state.mobility$resetStates();
         }
 
-        boolean hasElytraEnchant = hasElytraEnchant(player);
-        boolean isGliding = player.isGliding() && hasElytraEnchant;
+        if (player.isGliding() && shouldForceStopGlide(player)) {
+            player.stopFallFlying();
+        }
 
-        if (isGliding) {
+        boolean hasElytraEnchant = hasElytraEnchant(player);
+        boolean hasSwoopingEnchant = hasSwoopingEnchant(player);
+        boolean isElytraGliding = player.isGliding() && hasElytraEnchant;
+        boolean isSwoopingGliding = player.isGliding() && hasSwoopingEnchant;
+
+        if (isElytraGliding) {
             state.mobility$setElytraGliding(true);
             state.mobility$setWallJumping(false);
 
@@ -83,12 +91,34 @@ public abstract class LivingEntityMixin {
             state.mobility$setElytraHungerRemainder(0.0F);
         }
 
+        if (isSwoopingGliding) {
+            state.mobility$setSwoopingGliding(true);
+            state.mobility$setWallJumping(false);
+
+            if (!player.isCreative() && !player.isSpectator()) {
+                float exhaustionPerTick = (float) (MobilityConfig.ELYTRA_HUNGER_PER_15S * 4.0D / MobilityConfig.ELYTRA_HUNGER_TICK_INTERVAL);
+                if (exhaustionPerTick > 0.0F) {
+                    float accumulated = state.mobility$getSwoopingHungerRemainder() + exhaustionPerTick;
+                    if (accumulated >= 0.01F) {
+                        player.addExhaustion(accumulated);
+                        accumulated = 0.0F;
+                    }
+                    state.mobility$setSwoopingHungerRemainder(accumulated);
+                }
+            } else {
+                state.mobility$setSwoopingHungerRemainder(0.0F);
+            }
+        } else if (state.mobility$isSwoopingGliding()) {
+            state.mobility$setSwoopingGliding(false);
+            state.mobility$setSwoopingHungerRemainder(0.0F);
+        }
+
         // Handle wall jumping air control
         if (state.mobility$isWallJumping()) {
             tickWallJumping(player, state);
         }
 
-        maybeApplyElytraPhysics(player, state);
+        maybeApplyGlidePhysics(player, state);
     }
 
     @Inject(method = "canGlideWith", at = @At("HEAD"), cancellable = true)
@@ -97,7 +127,10 @@ public abstract class LivingEntityMixin {
             return;
         }
 
-        if (!EnchantmentUtil.hasEnchantment(stack, ModEnchantments.ELYTRA)) {
+        boolean hasElytra = EnchantmentUtil.hasEnchantment(stack, ModEnchantments.ELYTRA);
+        boolean hasSwooping = EnchantmentUtil.hasEnchantment(stack, ModEnchantments.SWOOPING);
+
+        if (!hasElytra && !hasSwooping) {
             return;
         }
 
@@ -112,6 +145,18 @@ public abstract class LivingEntityMixin {
     private boolean hasElytraEnchant(ServerPlayerEntity player) {
         ItemStack chest = player.getEquippedStack(EquipmentSlot.CHEST);
         return EnchantmentUtil.hasEnchantment(chest, ModEnchantments.ELYTRA);
+    }
+
+    private boolean hasSwoopingEnchant(ServerPlayerEntity player) {
+        ItemStack chest = player.getEquippedStack(EquipmentSlot.CHEST);
+        return EnchantmentUtil.hasEnchantment(chest, ModEnchantments.SWOOPING);
+    }
+
+    private boolean shouldForceStopGlide(ServerPlayerEntity player) {
+        return player.isOnGround()
+            || player.isTouchingWater()
+            || player.hasVehicle()
+            || player.hasStatusEffect(StatusEffects.LEVITATION);
     }
 
     // ========== WALL JUMP ==========
@@ -133,18 +178,20 @@ public abstract class LivingEntityMixin {
         }
     }
 
-    private void maybeApplyElytraPhysics(ServerPlayerEntity player, MobilityState state) {
-        if (!state.mobility$isElytraGliding()) {
-            return;
-        }
-
-        if (!hasElytraEnchant(player)) {
-            return;
-        }
-
+    private void maybeApplyGlidePhysics(ServerPlayerEntity player, MobilityState state) {
         Vec3d oldVelocity = mobility$preTickVelocity;
-        Vec3d newVelocity = ElytraPhysics.computeGlideVelocity(player, oldVelocity, ((LivingEntityAccessor) this).invokeGetEffectiveGravity());
-        player.setVelocity(newVelocity);
-        player.velocityModified = true;
+
+        if (state.mobility$isElytraGliding() && hasElytraEnchant(player)) {
+            Vec3d newVelocity = ElytraPhysics.computeGlideVelocity(player, oldVelocity, ((LivingEntityAccessor) this).invokeGetEffectiveGravity());
+            player.setVelocity(newVelocity);
+            player.velocityModified = true;
+            return;
+        }
+
+        if (state.mobility$isSwoopingGliding() && hasSwoopingEnchant(player)) {
+            Vec3d newVelocity = SwoopingPhysics.computeGlideVelocity(player, oldVelocity, ((LivingEntityAccessor) this).invokeGetEffectiveGravity());
+            player.setVelocity(newVelocity);
+            player.velocityModified = true;
+        }
     }
 }
