@@ -53,6 +53,8 @@ All tunable constants are in `ninja.trek.mobility.config.MobilityConfig`:
 ### Swooping
 - `SWOOPING_HUNGER_PER_SECOND`: 0.1f
 - `SWOOPING_AIR_CONTROL`: 0.02f
+- `SWOOPING_SPEED_LIMIT`: 3.0
+- `SWOOPING_DEAD_ZONE_DEGREES`: 2.0
 
 ### Dash
 - `DASH_VELOCITY`: 1.5

@@ -223,6 +223,7 @@ public class ServerPlayNetworkHandlerMixin {
         }
 
         player.startGliding();
+        applySwoopingImpulse();
         state.mobility$setSwoopingGliding(true);
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
         state.mobility$setWallJumping(false);
@@ -246,6 +247,28 @@ public class ServerPlayNetworkHandlerMixin {
 
         state.mobility$setCooldown(MobilityConfig.ABILITY_COOLDOWN_TICKS);
         debugMessage(player, "SUCCESS: Dash activated");
+    }
+
+    @Unique
+    private void applySwoopingImpulse() {
+        Vec3d currentVelocity = player.getVelocity();
+        double horizontalSpeed = Math.sqrt(currentVelocity.x * currentVelocity.x + currentVelocity.z * currentVelocity.z);
+
+        if (horizontalSpeed < 1.0e-5) {
+            Vec3d look = player.getRotationVector();
+            Vec3d horizontalLook = new Vec3d(look.x, 0.0, look.z);
+            if (horizontalLook.lengthSquared() > 1.0e-5) {
+                horizontalLook = horizontalLook.normalize();
+                Vec3d impulse = horizontalLook.multiply(MobilityConfig.SWOOPING_START_IMPULSE);
+                player.setVelocity(currentVelocity.add(impulse.x, 0.0, impulse.z));
+                player.velocityModified = true;
+            }
+        } else {
+            Vec3d horizontalVelocity = new Vec3d(currentVelocity.x, 0.0, currentVelocity.z).normalize();
+            Vec3d impulse = horizontalVelocity.multiply(MobilityConfig.SWOOPING_START_IMPULSE);
+            player.setVelocity(currentVelocity.add(impulse.x, 0.0, impulse.z));
+            player.velocityModified = true;
+        }
     }
 
     // ========== DOUBLE JUMP ==========

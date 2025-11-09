@@ -61,7 +61,7 @@ public abstract class LivingEntityMixin {
         }
 
         if (player.isGliding() && shouldForceStopGlide(player)) {
-            player.stopFallFlying();
+            player.stopGliding();
         }
 
         boolean hasElytraEnchant = hasElytraEnchant(player);

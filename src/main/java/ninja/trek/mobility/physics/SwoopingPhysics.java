@@ -1,6 +1,7 @@
 package ninja.trek.mobility.physics;
 
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import ninja.trek.mobility.config.MobilityConfig;
 
@@ -45,13 +46,18 @@ public final class SwoopingPhysics {
         }
 
         Vec3d velocityDir = oldVelocity.normalize();
+        if (isWithinDeadZone(velocityDir)) {
+            return clampSpeed(velocityAfterGravity);
+        }
+
         Vec3d liftDirection = computeLiftDirection(velocityDir);
 
         double liftMagnitude = speed * speed * MobilityConfig.SWOOPING_LIFT_COEFFICIENT;
         Vec3d lift = liftDirection.multiply(liftMagnitude);
 
         Vec3d updatedVelocity = velocityAfterGravity.add(lift);
-        return applyDrag(updatedVelocity);
+        Vec3d draggedVelocity = applyDrag(updatedVelocity);
+        return clampSpeed(draggedVelocity);
     }
 
     private static Vec3d computeLiftDirection(Vec3d velocityDir) {
@@ -66,10 +72,60 @@ public final class SwoopingPhysics {
             projectedUp = fallback;
         }
 
-        return projectedUp.normalize();
+        Vec3d normalized = projectedUp.normalize();
+        if (normalized.dotProduct(WORLD_UP) < 0.0D) {
+            normalized = normalized.multiply(-1.0D);
+        }
+        return applyUpwardBias(normalized);
     }
 
     private static Vec3d applyDrag(Vec3d velocity) {
         return velocity.multiply(MobilityConfig.SWOOPING_DRAG_XZ, MobilityConfig.SWOOPING_DRAG_Y, MobilityConfig.SWOOPING_DRAG_XZ);
+    }
+
+    private static Vec3d applyUpwardBias(Vec3d liftDirection) {
+        double biasDegrees = MobilityConfig.SWOOPING_LIFT_UPWARD_BIAS_DEGREES;
+        if (biasDegrees <= 0.0D) {
+            return liftDirection;
+        }
+
+        double t = MathHelper.clamp(biasDegrees / 90.0D, 0.0D, 1.0D);
+        Vec3d biased = liftDirection.multiply(1.0D - t).add(WORLD_UP.multiply(t));
+        if (biased.lengthSquared() < EPSILON) {
+            return liftDirection;
+        }
+        return biased.normalize();
+    }
+
+    private static Vec3d clampSpeed(Vec3d velocity) {
+        double limit = MobilityConfig.SWOOPING_SPEED_LIMIT;
+        if (limit <= 0.0D) {
+            return velocity;
+        }
+
+        double speedSquared = velocity.lengthSquared();
+        double limitSquared = limit * limit;
+        if (speedSquared <= limitSquared) {
+            return velocity;
+        }
+
+        double scale = limit / Math.sqrt(speedSquared);
+        return new Vec3d(velocity.x * scale, velocity.y * scale, velocity.z * scale);
+    }
+
+    private static boolean isWithinDeadZone(Vec3d velocityDir) {
+        double deadZoneDegrees = MobilityConfig.SWOOPING_DEAD_ZONE_DEGREES;
+        if (deadZoneDegrees <= 0.0D) {
+            return false;
+        }
+
+        double dot = velocityDir.dotProduct(WORLD_UP);
+        if (dot <= 0.0D) {
+            return false;
+        }
+
+        double radians = deadZoneDegrees * MathHelper.RADIANS_PER_DEGREE;
+        double cosThreshold = Math.cos(radians);
+        return dot >= cosThreshold;
     }
 }

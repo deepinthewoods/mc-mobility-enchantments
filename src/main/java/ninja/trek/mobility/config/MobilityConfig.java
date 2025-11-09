@@ -14,13 +14,25 @@ public class MobilityConfig {
     public static final float SWOOPING_AIR_CONTROL = 0.02f;
 
     /** Lift coefficient for swooping enchantment (used in speed^2 * coeff formula) */
-    public static final double SWOOPING_LIFT_COEFFICIENT = 0.1;
+    public static final double SWOOPING_LIFT_COEFFICIENT = 0.2;
+
+    /** Degrees to bias the lift vector toward world-up (0 = no bias, 90 = fully upright) */
+    public static final double SWOOPING_LIFT_UPWARD_BIAS_DEGREES = 3.0;
 
     /** Horizontal drag applied after swooping physics step (1.0 = no drag) */
-    public static final double SWOOPING_DRAG_XZ = 0.99;
+    public static final double SWOOPING_DRAG_XZ = 0.99988;
 
     /** Vertical drag applied after swooping physics step (1.0 = no drag) */
-    public static final double SWOOPING_DRAG_Y = 0.985;
+    public static final double SWOOPING_DRAG_Y = 0.9805;
+
+    /** Horizontal impulse applied when swooping starts to kick the player forward */
+    public static final double SWOOPING_START_IMPULSE = 0.25;
+
+    /** Maximum movement speed while swooping (<= 0 disables clamping) */
+    public static final double SWOOPING_SPEED_LIMIT = 1.0;
+
+    /** Degrees from straight up where swooping forces are disabled */
+    public static final double SWOOPING_DEAD_ZONE_DEGREES = 30.0;
 
     // === DASH ===
     /** Velocity magnitude for dash (sufficient to move ~10 blocks) */
